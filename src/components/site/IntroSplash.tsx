@@ -59,8 +59,10 @@ export function IntroSplash() {
             <motion.span
               className="inline-block text-foreground"
               initial={{ opacity: 0, x: -24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.45, ease: EASE }}
+              animate={
+                phase === "zoom" ? { opacity: 0, x: -24 } : { opacity: 1, x: 0 }
+              }
+              transition={{ duration: 0.4, ease: EASE }}
             >
               &lt;
             </motion.span>
