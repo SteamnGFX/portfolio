@@ -8,9 +8,13 @@ function hashSource(text: string) {
   return createHash("sha256").update(text).digest("hex");
 }
 
-async function callDeepLBatch(texts: string[]): Promise<string[]> {
+// null = no se pudo traducir (sin API key o falló la llamada). Es importante
+// distinguir esto de "traducido con éxito": si cacheáramos el texto original
+// como si fuera la traducción, quedaría atascado ahí para siempre aunque
+// después se configure/corrija la API key.
+async function callDeepLBatch(texts: string[]): Promise<string[] | null> {
   const apiKey = process.env.DEEPL_API_KEY;
-  if (!apiKey) return texts;
+  if (!apiKey) return null;
 
   try {
     const params = new URLSearchParams();
@@ -29,14 +33,14 @@ async function callDeepLBatch(texts: string[]): Promise<string[]> {
 
     if (!res.ok) {
       console.error("DeepL translation failed:", res.status, await res.text());
-      return texts;
+      return null;
     }
 
     const data: { translations: { text: string }[] } = await res.json();
     return data.translations.map((t) => t.text);
   } catch (error) {
     console.error("Error llamando a DeepL:", error);
-    return texts;
+    return null;
   }
 }
 
@@ -44,7 +48,9 @@ async function callDeepLBatch(texts: string[]): Promise<string[]> {
  * Traduce varios textos español -> inglés en un solo lote, usando una caché
  * en base de datos (clave = hash del texto original). Si el texto en /admin
  * cambia, el hash cambia y se dispara una nueva traducción automáticamente.
- * Sin DEEPL_API_KEY configurada, devuelve los textos originales sin traducir.
+ * Sin DEEPL_API_KEY configurada (o si la llamada falla), devuelve los textos
+ * originales SIN guardarlos en caché, para que se reintente la traducción
+ * real la próxima vez en vez de quedar atascado con el texto sin traducir.
  */
 export async function translateAllToEnglish(texts: string[]): Promise<string[]> {
   const hashes = texts.map((t) => hashSource(t?.trim() ?? ""));
@@ -67,19 +73,21 @@ export async function translateAllToEnglish(texts: string[]): Promise<string[]> 
   if (missingTexts.length > 0) {
     const translatedMissing = await callDeepLBatch(missingTexts);
 
-    await Promise.all(
-      missingIndexes.map((idx, j) =>
-        prisma.translationCache
-          .upsert({
-            where: { sourceHash_targetLang: { sourceHash: hashes[idx], targetLang: TARGET_LANG } },
-            update: { translated: translatedMissing[j] },
-            create: { sourceHash: hashes[idx], targetLang: TARGET_LANG, translated: translatedMissing[j] },
-          })
-          .catch((error) => console.error("No se pudo guardar la traducción en caché:", error)),
-      ),
-    );
+    if (translatedMissing) {
+      await Promise.all(
+        missingIndexes.map((idx, j) =>
+          prisma.translationCache
+            .upsert({
+              where: { sourceHash_targetLang: { sourceHash: hashes[idx], targetLang: TARGET_LANG } },
+              update: { translated: translatedMissing[j] },
+              create: { sourceHash: hashes[idx], targetLang: TARGET_LANG, translated: translatedMissing[j] },
+            })
+            .catch((error) => console.error("No se pudo guardar la traducción en caché:", error)),
+        ),
+      );
 
-    missingIndexes.forEach((idx, j) => cacheMap.set(hashes[idx], translatedMissing[j]));
+      missingIndexes.forEach((idx, j) => cacheMap.set(hashes[idx], translatedMissing[j]));
+    }
   }
 
   return texts.map((t, i) => (t?.trim() ? (cacheMap.get(hashes[i]) ?? t) : t));
