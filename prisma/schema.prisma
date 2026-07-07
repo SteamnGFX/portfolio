@@ -75,6 +75,26 @@ model Project {
   @@index([order])
 }
 
+/// Singleton: siempre id = 1. Credenciales del único usuario admin.
+/// Se siembra una vez desde ADMIN_EMAIL/ADMIN_PASSWORD_HASH; después se
+/// administra desde la app (cambiar/recuperar contraseña), sin redeploy.
+model AdminCredentials {
+  id             Int       @id @default(1)
+  email          String
+  passwordHash   String
+  failedAttempts Int       @default(0)
+  lockedUntil    DateTime?
+  updatedAt      DateTime  @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
 /// Analítica ligera y propia del sitio (sin servicios externos).
 model PageView {
   id        String   @id @default(cuid())

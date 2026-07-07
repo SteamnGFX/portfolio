@@ -31,6 +31,10 @@ export const skillSchema = z.object({
   category: z.string().optional().or(z.literal("")),
 });
 
+export const newPasswordSchema = z
+  .string()
+  .min(8, "Debe tener al menos 8 caracteres");
+
 export const projectSchema = z.object({
   title: z.string().min(1, "Requerido"),
   description: z.string().min(1, "Requerido"),

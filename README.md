@@ -95,6 +95,26 @@ Para que todo esto apunte a tu dominio real y no a `localhost`, **es importante*
 
 Una vez publicado, puedes acelerar que Google lo indexe dándolo de alta en [Google Search Console](https://search.google.com/search-console) (Agregar propiedad → tu dominio → enviar `https://tu-dominio.com/sitemap.xml`).
 
+## Seguridad del login
+
+- **Bloqueo por intentos**: tras 5 intentos fallidos seguidos, el acceso se bloquea 15 minutos.
+- **Recuperar contraseña**: en `/admin/login` hay un link "¿Olvidaste tu contraseña?" → pide tu correo → si coincide con el del admin, te llega un email con un enlace válido por **5 minutos** para poner una nueva contraseña.
+- **Cambiar contraseña** ya logueado: `/admin/settings`.
+
+La contraseña ya **no vive en una variable de entorno**: `ADMIN_EMAIL`/`ADMIN_PASSWORD_HASH` solo se usan la primera vez para crear el registro en la base de datos; de ahí en adelante se administra desde la propia app (cambiarla no requiere redeploy).
+
+### Configurar el envío de correos (Resend)
+
+El correo de recuperación se envía con [Resend](https://resend.com) (gratis hasta 3,000 correos/mes). Sin `RESEND_API_KEY` configurada, en local el enlace de recuperación simplemente se imprime en la consola del servidor (para poder probar el flujo sin cuenta de Resend).
+
+1. Crea una cuenta gratis en [resend.com](https://resend.com).
+2. **Domains** → **Add Domain** → escribe tu dominio (ej. `steamngfx.dev`) → te da registros DNS (TXT/CNAME para SPF/DKIM) que agregas en el DNS de tu dominio (en Vercel: **Domains** en el dashboard de tu cuenta → tu dominio → **DNS Records** — igual que hiciste para la verificación de Google Search Console).
+3. Espera a que el dominio quede "Verified" en Resend (unos minutos).
+4. **API Keys** → **Create API Key** → cópiala.
+5. Agrégala como `RESEND_API_KEY` en tus variables de entorno de Vercel → **Redeploy**.
+
+No necesitas un buzón de correo real ni pagar por uno — esto solo permite *enviar* correos desde `noreply@tu-dominio`, no recibirlos.
+
 ## Despliegue (Vercel + Neon + Vercel Blob)
 
 1. **Crea la base de datos en Neon**: entra a [neon.tech](https://neon.tech), crea un proyecto gratuito y copia el connection string (`DATABASE_URL`).
@@ -116,6 +136,7 @@ Una vez publicado, puedes acelerar que Google lo indexe dándolo de alta en [Goo
    - `ADMIN_EMAIL`
    - `ADMIN_PASSWORD_HASH`
    - `NEXT_PUBLIC_SITE_URL`: tu dominio real, ej. `https://tu-proyecto.vercel.app` (actualízalo si luego conectas un dominio propio)
+   - `RESEND_API_KEY` (opcional): para que el correo de "recuperar contraseña" se envíe de verdad (ver sección "Seguridad del login")
 
 5. **Activa Vercel Blob**: en tu proyecto de Vercel, ve a la pestaña **Storage → Create Database → Blob**. Al conectarlo, Vercel agrega automáticamente la variable `BLOB_READ_WRITE_TOKEN` a tu proyecto.
 
@@ -129,12 +150,6 @@ Una vez publicado, puedes acelerar que Google lo indexe dándolo de alta en [Goo
 7. Haz deploy (Vercel lo hace automáticamente al importar el repo, y en cada `git push` a `main` después de eso).
 
 Después de este primer deploy, **todo lo demás se edita desde `/admin` en producción** — nunca necesitas volver a desplegar para actualizar contenido.
-
-## Cambiar la contraseña de administrador
-
-1. Genera un nuevo hash: `npm run hash-password -- "tu-nueva-password"`.
-2. Actualiza `ADMIN_PASSWORD_HASH` en tu `.env` local y/o en las variables de entorno del proyecto en Vercel.
-3. En Vercel, actualizar una variable de entorno sí requiere un redeploy (Deployments → ⋯ → Redeploy) — esto es intencional: separa "contenido" (editable desde `/admin`, sin redeploy) de "credenciales de acceso" (cambio raro, vía variables de entorno).
 
 ## Scripts
 

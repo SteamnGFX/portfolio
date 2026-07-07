@@ -2,6 +2,13 @@
 
 import { AuthError } from "next-auth";
 import { signIn, signOut } from "@/lib/auth";
+import { LOCKOUT_THRESHOLD } from "@/lib/adminCredentials";
+
+const ERROR_MESSAGES: Record<string, string> = {
+  account_locked: `Demasiados intentos fallidos (${LOCKOUT_THRESHOLD}). Tu cuenta se bloqueó 15 minutos por seguridad.`,
+  not_configured: "El panel de administración no está configurado todavía.",
+  invalid_credentials: "Correo o contraseña incorrectos.",
+};
 
 export async function authenticate(_prevState: string | undefined, formData: FormData) {
   try {
@@ -12,7 +19,8 @@ export async function authenticate(_prevState: string | undefined, formData: For
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return "Correo o contraseña incorrectos.";
+      const code = (error as AuthError & { code?: string }).code;
+      return ERROR_MESSAGES[code ?? ""] ?? "Correo o contraseña incorrectos.";
     }
     throw error;
   }

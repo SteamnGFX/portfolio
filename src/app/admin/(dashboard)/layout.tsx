@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/experience", label: "Experiencia y educación" },
   { href: "/admin/skills", label: "Skills" },
   { href: "/admin/projects", label: "Proyectos" },
+  { href: "/admin/settings", label: "Seguridad" },
 ];
 
 export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
