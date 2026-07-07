@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portafolio — Angel Roberto Martínez Castro
 
-## Getting Started
+Portafolio personal construido con Next.js. Todo el contenido (perfil, experiencia, skills, proyectos, CV) se edita desde un panel `/admin` protegido con login, se guarda en una base de datos Postgres y se publica **al instante, sin necesidad de volver a desplegar**.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Next.js 16** (App Router) + TypeScript
+- **Tailwind CSS v4** — tema oscuro "tech"
+- **Prisma ORM + PostgreSQL** (Neon en producción)
+- **NextAuth.js (Auth.js v5)** — login del admin (Credentials)
+- **Vercel Blob** — almacenamiento de imágenes de proyectos y el CV en PDF
+- **Zod** — validación de formularios
+- **Server Actions** de Next.js para las mutaciones del admin
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Requisitos
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 20+
+- Docker (para levantar Postgres en local) — o una base de datos Postgres ya disponible (por ejemplo, un branch de Neon)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup local
 
-## Learn More
+1. Instala dependencias:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Levanta un Postgres local con Docker:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   docker run -d --name portfolio-postgres \
+     -e POSTGRES_USER=portfolio -e POSTGRES_PASSWORD=portfolio -e POSTGRES_DB=portfolio \
+     -p 5432:5432 postgres:16-alpine
+   ```
 
-## Deploy on Vercel
+3. Copia `.env.example` a `.env` y completa los valores:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   cp .env.example .env
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   - `DATABASE_URL`: `postgresql://portfolio:portfolio@localhost:5432/portfolio?schema=public` (o tu connection string de Neon).
+   - `AUTH_SECRET`: genera uno con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+   - `ADMIN_EMAIL`: el correo con el que vas a iniciar sesión en `/admin`.
+   - `ADMIN_PASSWORD_HASH`: genera el hash con `npm run hash-password -- "tu-password"` y copia la línea completa (ya viene con los `$` escapados correctamente para el `.env`).
+   - `BLOB_READ_WRITE_TOKEN`: puedes dejarlo vacío en local; solo es necesario para subir imágenes/CV (ver sección de despliegue). Sin este token, las imágenes y el CV se guardan en `public/uploads` en tu disco.
+   - `NEXT_PUBLIC_SITE_URL`: en local déjalo en `http://localhost:3000`. En producción, cámbialo a tu dominio real (ver sección de SEO).
+
+4. Aplica las migraciones y carga los datos iniciales (tu información de LinkedIn):
+
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+5. Levanta el servidor de desarrollo:
+
+   ```bash
+   npm run dev
+   ```
+
+   - Sitio público: http://localhost:3000
+   - Panel admin: http://localhost:3000/admin/login
+
+> ⚠️ **Importante sobre `.env`**: Next.js expande automáticamente cualquier `$algo` dentro de un `.env` como si fuera una variable. Los hashes de bcrypt contienen `$` (ej. `$2b$12$...`), así que si generas un hash a mano, escapa cada `$` como `\$`. El comando `npm run hash-password` ya lo hace por ti.
+
+## Editar el contenido (sin redeploy)
+
+Todo el contenido del sitio vive en la base de datos y se lee en cada request (no hay caché estática de por medio), así que cualquier cambio guardado desde `/admin` se refleja de inmediato en el sitio público:
+
+- **Perfil** (`/admin/profile`): nombre, título, ubicación, "Acerca de", foto, email, LinkedIn, GitHub y CV en PDF.
+- **Experiencia y educación** (`/admin/experience`): historial laboral y estudios, con logo de empresa opcional. Se ordenan automáticamente por fecha (la más reciente/actual primero) — no depende del orden en que los captures.
+- **Skills** (`/admin/skills`): tecnologías agrupadas por categoría.
+- **Proyectos** (`/admin/projects`): galería con varias imágenes por proyecto (se muestran como carrusel si hay más de una), descripción, stack, links a repo/demo y flag de "destacado".
+
+## Analítica
+
+El dashboard (`/admin`) muestra métricas propias, sin servicios externos: visitas totales, visitas de los últimos 7 días, clics en LinkedIn/GitHub/email, descargas de CV, y una gráfica de visitas por día (últimos 14 días). Se registran automáticamente:
+
+- Una "visita" cada vez que alguien carga el sitio público.
+- Un evento cuando alguien hace clic en LinkedIn, GitHub, tu email, o descarga el CV.
+
+Los datos viven en las tablas `PageView` y `AnalyticsEvent` de tu base de datos — puedes consultarlos también desde `npm run db:studio` si quieres ver el detalle.
+
+## SEO
+
+El sitio está preparado para indexarse correctamente en buscadores:
+
+- **Metadata dinámica**: título, descripción y Open Graph se generan a partir de tu perfil real (`/admin/profile`), no están hardcodeados.
+- **`/sitemap.xml`** y **`/robots.txt`**: generados automáticamente (excluyen `/admin`).
+- **Imagen Open Graph** (`/opengraph-image`): se genera dinámicamente con tu nombre y título — así se ve bien al compartir el link en WhatsApp, LinkedIn, Twitter/X, etc.
+- **Datos estructurados (JSON-LD)**: schema.org `Person` embebido en la página, para que Google pueda mostrar información enriquecida.
+
+Para que todo esto apunte a tu dominio real y no a `localhost`, **es importante** que configures `NEXT_PUBLIC_SITE_URL` con tu URL de producción en Vercel (ver siguiente sección) — de lo contrario el sitemap, robots.txt y las imágenes Open Graph seguirán apuntando a `localhost:3000`.
+
+Una vez publicado, puedes acelerar que Google lo indexe dándolo de alta en [Google Search Console](https://search.google.com/search-console) (Agregar propiedad → tu dominio → enviar `https://tu-dominio.com/sitemap.xml`).
+
+## Despliegue (Vercel + Neon + Vercel Blob)
+
+1. **Crea la base de datos en Neon**: entra a [neon.tech](https://neon.tech), crea un proyecto gratuito y copia el connection string (`DATABASE_URL`).
+
+2. **Sube el repo a GitHub** (si aún no lo has hecho):
+
+   ```bash
+   git add -A
+   git commit -m "Portafolio inicial"
+   git remote add origin <tu-repo-de-github>
+   git push -u origin main
+   ```
+
+3. **Crea una cuenta en [vercel.com](https://vercel.com)** (puedes entrar con tu cuenta de GitHub) e importa el repositorio.
+
+4. En la configuración del proyecto en Vercel, agrega las variables de entorno (Project Settings → Environment Variables):
+   - `DATABASE_URL` (el de Neon)
+   - `AUTH_SECRET`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD_HASH`
+   - `NEXT_PUBLIC_SITE_URL`: tu dominio real, ej. `https://tu-proyecto.vercel.app` (actualízalo si luego conectas un dominio propio)
+
+5. **Activa Vercel Blob**: en tu proyecto de Vercel, ve a la pestaña **Storage → Create Database → Blob**. Al conectarlo, Vercel agrega automáticamente la variable `BLOB_READ_WRITE_TOKEN` a tu proyecto.
+
+6. Antes del primer deploy, corre las migraciones y el seed apuntando a la base de Neon (puedes hacerlo desde tu máquina cambiando `DATABASE_URL` en tu `.env` local temporalmente, o usando `vercel env pull`):
+
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+7. Haz deploy (Vercel lo hace automáticamente al importar el repo, y en cada `git push` a `main` después de eso).
+
+Después de este primer deploy, **todo lo demás se edita desde `/admin` en producción** — nunca necesitas volver a desplegar para actualizar contenido.
+
+## Cambiar la contraseña de administrador
+
+1. Genera un nuevo hash: `npm run hash-password -- "tu-nueva-password"`.
+2. Actualiza `ADMIN_PASSWORD_HASH` en tu `.env` local y/o en las variables de entorno del proyecto en Vercel.
+3. En Vercel, actualizar una variable de entorno sí requiere un redeploy (Deployments → ⋯ → Redeploy) — esto es intencional: separa "contenido" (editable desde `/admin`, sin redeploy) de "credenciales de acceso" (cambio raro, vía variables de entorno).
+
+## Scripts
+
+| Comando | Descripción |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm run start` | Sirve el build de producción |
+| `npm run db:migrate` | Aplica migraciones de Prisma |
+| `npm run db:seed` | Carga los datos iniciales |
+| `npm run db:studio` | Abre Prisma Studio para ver/editar la base de datos directamente |
+| `npm run hash-password -- "password"` | Genera el hash bcrypt para `ADMIN_PASSWORD_HASH` |

@@ -1,0 +1,94 @@
+// Prisma schema — portafolio de Angel Roberto Martínez Castro
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Singleton: siempre id = 1. Datos generales del perfil (tipo LinkedIn).
+model Profile {
+  id          Int      @id @default(1)
+  name        String
+  title       String
+  location    String
+  summary     String
+  avatarUrl   String?
+  email       String
+  linkedinUrl String
+  githubUrl   String?
+  cvUrl       String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  company     String
+  role        String
+  location    String?
+  logoUrl     String?
+  startDate   DateTime
+  endDate     DateTime?
+  description String
+  order       Int       @default(0)
+
+  @@index([order])
+}
+
+model Education {
+  id          String    @id @default(cuid())
+  institution String
+  degree      String
+  startDate   DateTime?
+  endDate     DateTime?
+  order       Int       @default(0)
+
+  @@index([order])
+}
+
+model Skill {
+  id       String  @id @default(cuid())
+  name     String
+  category String?
+  order    Int     @default(0)
+
+  @@index([order])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  images      String[] @default([])
+  techStack   String[]
+  repoUrl     String?
+  demoUrl     String?
+  featured    Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([order])
+}
+
+/// Analítica ligera y propia del sitio (sin servicios externos).
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([type])
+  @@index([createdAt])
+}
