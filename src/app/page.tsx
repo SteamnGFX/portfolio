@@ -10,6 +10,7 @@ import { ProjectsGrid } from "@/components/site/ProjectsGrid";
 import { ContactSection } from "@/components/site/ContactSection";
 import { Footer } from "@/components/site/Footer";
 import { PageViewTracker } from "@/components/site/PageViewTracker";
+import { IntroSplash } from "@/components/site/IntroSplash";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PageViewTracker />
+      <IntroSplash />
       <Navbar name={profile.name} />
       <main>
         <Hero
