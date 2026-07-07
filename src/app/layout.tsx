@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getSiteUrl } from "@/lib/site";
 import { getLocale } from "@/lib/i18n";
@@ -39,6 +39,15 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
   },
+};
+
+export const viewport: Viewport = {
+  // viewport-fit=cover: necesario para que env(safe-area-inset-bottom) funcione
+  // en iPhone (la barra inferior móvil respeta el "home indicator").
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#05070d",
 };
 
 export default async function RootLayout({

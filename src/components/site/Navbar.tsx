@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Dictionary, Locale } from "@/lib/dictionary";
 import { LanguageSwitcher } from "@/components/site/LanguageSwitcher";
+import { useActiveSection } from "@/lib/useActiveSection";
 
 export function Navbar({ name, dict, locale }: { name: string; dict: Dictionary; locale: Locale }) {
-  const [active, setActive] = useState<string>("");
-
   const links = [
     { href: "#about", label: dict.nav.about },
     { href: "#experience", label: dict.nav.experience },
@@ -16,26 +14,7 @@ export function Navbar({ name, dict, locale }: { name: string; dict: Dictionary;
     { href: "#contact", label: dict.nav.contact },
   ];
 
-  useEffect(() => {
-    const sections = links
-      .map((link) => document.querySelector(link.href))
-      .filter((el): el is Element => el !== null);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActive(`#${entry.target.id}`);
-          }
-        });
-      },
-      { rootMargin: "-40% 0px -50% 0px", threshold: 0 },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const active = useActiveSection(links.map((l) => l.href));
 
   const initials = name
     .split(" ")
@@ -52,7 +31,8 @@ export function Navbar({ name, dict, locale }: { name: string; dict: Dictionary;
           </span>
           <span className="hidden sm:inline">{name.split(" ").slice(0, 2).join(" ")}</span>
         </a>
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* En móvil, la navegación y el idioma viven en la barra inferior (MobileTabBar). */}
+        <div className="hidden items-center gap-4 sm:flex">
           <ul className="flex items-center gap-1 sm:gap-2">
             {links.map((link) => (
               <li key={link.href}>

@@ -13,6 +13,7 @@ import { ContactSection } from "@/components/site/ContactSection";
 import { Footer } from "@/components/site/Footer";
 import { PageViewTracker } from "@/components/site/PageViewTracker";
 import { IntroSplash } from "@/components/site/IntroSplash";
+import { MobileTabBar } from "@/components/site/MobileTabBar";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +94,7 @@ export default async function Home() {
         />
       </main>
       <Footer name={profile.name} dict={dict} />
+      <MobileTabBar dict={dict} locale={locale} />
     </>
   );
 }
