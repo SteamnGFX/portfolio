@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { logout } from "@/lib/actions/auth";
-import { Button } from "@/components/ui/Button";
+import { LogoutButton } from "@/components/admin/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +38,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           >
             Ver sitio público →
           </Link>
-          <form action={logout}>
-            <Button type="submit" variant="secondary" size="sm" className="w-full">
-              Cerrar sesión
-            </Button>
-          </form>
+          <LogoutButton />
         </div>
       </aside>
       <main className="flex-1 px-6 py-8 sm:px-10">{children}</main>

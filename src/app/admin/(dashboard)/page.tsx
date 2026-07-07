@@ -3,6 +3,8 @@ import { getProfile, getExperiences, getSkills, getProjects, getAnalyticsSummary
 import { Card, CardBody } from "@/components/ui/Card";
 import { DailyVisitsChart } from "@/components/admin/DailyVisitsChart";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const [profile, experiences, skills, projects, analytics] = await Promise.all([
     getProfile(),

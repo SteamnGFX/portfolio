@@ -1,5 +1,11 @@
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthConfig } from "@/lib/auth.config";
+
+// Instancia separada y ligera de NextAuth solo para el middleware (Edge Runtime):
+// evita que Prisma/bcrypt (usados en la config completa de lib/auth.ts) se
+// empaqueten en la Edge Function, que en Vercel Hobby tiene un límite de 1MB.
+const { auth } = NextAuth(getAuthConfig());
 
 const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"];
 

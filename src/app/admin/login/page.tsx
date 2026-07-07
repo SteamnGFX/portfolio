@@ -1,5 +1,11 @@
 import { LoginForm } from "@/components/admin/LoginForm";
 
+// Fuerza esta página a no ser estática: cuando es el destino de un redirect
+// desde un Server Action que también limpia una cookie (logout), una versión
+// estática cacheada de esta página puede hacer que Next.js descarte el
+// header Set-Cookie de esa respuesta combinada.
+export const dynamic = "force-dynamic";
+
 export default function AdminLoginPage() {
   return (
     <div className="bg-grid flex min-h-screen flex-1 items-center justify-center px-6">

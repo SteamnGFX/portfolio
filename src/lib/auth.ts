@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getOrBootstrapCredentials, LOCKOUT_THRESHOLD, LOCKOUT_DURATION_MS } from "@/lib/adminCredentials";
+import { getAuthConfig } from "@/lib/auth.config";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -23,11 +24,7 @@ class NotConfiguredError extends CredentialsSignin {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  trustHost: true,
-  pages: {
-    signIn: "/admin/login",
-  },
+  ...getAuthConfig(),
   providers: [
     Credentials({
       credentials: {
