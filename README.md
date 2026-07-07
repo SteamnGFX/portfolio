@@ -115,6 +115,22 @@ El correo de recuperación se envía con [Resend](https://resend.com) (gratis ha
 
 No necesitas un buzón de correo real ni pagar por uno — esto solo permite *enviar* correos desde `noreply@tu-dominio`, no recibirlos.
 
+## Idioma (español / inglés automático)
+
+El sitio detecta el idioma del navegador del visitante (español por defecto, inglés si su navegador está en inglés) y también trae un selector manual (ES/EN) en la esquina superior derecha — la elección se guarda en una cookie y se respeta en visitas futuras.
+
+**Tú solo escribes el contenido en español en `/admin`, como siempre** — no hay que capturar nada dos veces. Cuando alguien ve el sitio en inglés, el texto (perfil, "Acerca de", experiencia, educación, proyectos) se traduce automáticamente con IA (DeepL) la primera vez, y el resultado se guarda en caché en la base de datos — las siguientes visitas en inglés son instantáneas, sin volver a traducir. Si editas un texto en español, la próxima visita en inglés genera la traducción actualizada sola.
+
+La única excepción es el **CV**: como es un documento con formato (no texto plano), no se traduce automáticamente. En `/admin/profile` puedes subir un CV en español y, opcionalmente, uno en inglés — si no subes el de inglés, se ofrece el de español como respaldo.
+
+### Configurar la traducción automática (DeepL)
+
+Sin `DEEPL_API_KEY`, el sitio en inglés muestra el contenido narrativo tal cual, sin traducir (la interfaz — botones, menú, etiquetas — sí está traducida siempre, eso no depende de DeepL).
+
+1. Crea una cuenta gratis en [deepl.com/pro-api](https://www.deepl.com/pro-api) (plan **DeepL API Free**, 500,000 caracteres/mes gratis — de sobra para un portafolio).
+2. En tu cuenta, ve a **Account → API Keys** y copia tu key (termina en `:fx`).
+3. Agrégala como `DEEPL_API_KEY` en tus variables de entorno de Vercel → **Redeploy**.
+
 ## Despliegue (Vercel + Neon + Vercel Blob)
 
 1. **Crea la base de datos en Neon**: entra a [neon.tech](https://neon.tech), crea un proyecto gratuito y copia el connection string (`DATABASE_URL`).
@@ -137,6 +153,7 @@ No necesitas un buzón de correo real ni pagar por uno — esto solo permite *en
    - `ADMIN_PASSWORD_HASH`
    - `NEXT_PUBLIC_SITE_URL`: tu dominio real, ej. `https://tu-proyecto.vercel.app` (actualízalo si luego conectas un dominio propio)
    - `RESEND_API_KEY` (opcional): para que el correo de "recuperar contraseña" se envíe de verdad (ver sección "Seguridad del login")
+   - `DEEPL_API_KEY` (opcional): para que el contenido se traduzca automáticamente al inglés (ver sección "Idioma")
 
 5. **Activa Vercel Blob**: en tu proyecto de Vercel, ve a la pestaña **Storage → Create Database → Blob**. Al conectarlo, Vercel agrega automáticamente la variable `BLOB_READ_WRITE_TOKEN` a tu proyecto.
 

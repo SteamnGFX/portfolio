@@ -27,9 +27,11 @@ export async function updateProfile(_prevState: string | undefined, formData: Fo
 
   const newAvatarUrl = await uploadIfPresent(formData.get("avatar"), "avatar");
   const newCvUrl = await uploadIfPresent(formData.get("cv"), "cv");
+  const newCvUrlEn = await uploadIfPresent(formData.get("cvEn"), "cv-en");
 
   if (newAvatarUrl && current?.avatarUrl) await deleteBlobSafe(current.avatarUrl);
   if (newCvUrl && current?.cvUrl) await deleteBlobSafe(current.cvUrl);
+  if (newCvUrlEn && current?.cvUrlEn) await deleteBlobSafe(current.cvUrlEn);
 
   await prisma.profile.upsert({
     where: { id: 1 },
@@ -38,6 +40,7 @@ export async function updateProfile(_prevState: string | undefined, formData: Fo
       githubUrl: parsed.data.githubUrl || null,
       ...(newAvatarUrl && { avatarUrl: newAvatarUrl }),
       ...(newCvUrl && { cvUrl: newCvUrl }),
+      ...(newCvUrlEn && { cvUrlEn: newCvUrlEn }),
     },
     create: {
       id: 1,
@@ -45,6 +48,7 @@ export async function updateProfile(_prevState: string | undefined, formData: Fo
       githubUrl: parsed.data.githubUrl || null,
       avatarUrl: newAvatarUrl ?? null,
       cvUrl: newCvUrl ?? null,
+      cvUrlEn: newCvUrlEn ?? null,
     },
   });
 

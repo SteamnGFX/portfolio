@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import type { Dictionary, Locale } from "@/lib/dictionary";
+import { LanguageSwitcher } from "@/components/site/LanguageSwitcher";
 
-const links = [
-  { href: "#about", label: "Acerca de" },
-  { href: "#experience", label: "Experiencia" },
-  { href: "#skills", label: "Skills" },
-  { href: "#projects", label: "Proyectos" },
-  { href: "#contact", label: "Contacto" },
-];
-
-export function Navbar({ name }: { name: string }) {
+export function Navbar({ name, dict, locale }: { name: string; dict: Dictionary; locale: Locale }) {
   const [active, setActive] = useState<string>("");
+
+  const links = [
+    { href: "#about", label: dict.nav.about },
+    { href: "#experience", label: dict.nav.experience },
+    { href: "#skills", label: dict.nav.skills },
+    { href: "#projects", label: dict.nav.projects },
+    { href: "#contact", label: dict.nav.contact },
+  ];
 
   useEffect(() => {
     const sections = links
@@ -32,6 +34,7 @@ export function Navbar({ name }: { name: string }) {
 
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const initials = name
@@ -49,21 +52,24 @@ export function Navbar({ name }: { name: string }) {
           </span>
           <span className="hidden sm:inline">{name.split(" ").slice(0, 2).join(" ")}</span>
         </a>
-        <ul className="flex items-center gap-1 sm:gap-2">
-          {links.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                className={cn(
-                  "rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-surface hover:text-foreground sm:px-3",
-                  active === link.href ? "text-accent" : "text-muted",
-                )}
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-2 sm:gap-4">
+          <ul className="flex items-center gap-1 sm:gap-2">
+            {links.map((link) => (
+              <li key={link.href}>
+                <a
+                  href={link.href}
+                  className={cn(
+                    "rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-surface hover:text-foreground sm:px-3",
+                    active === link.href ? "text-accent" : "text-muted",
+                  )}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <LanguageSwitcher locale={locale} />
+        </div>
       </nav>
     </header>
   );

@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { LinkButton } from "@/components/ui/Button";
 import { Typewriter } from "@/components/site/Typewriter";
 import { trackEvent } from "@/lib/actions/analytics";
+import type { Dictionary } from "@/lib/dictionary";
 
 interface HeroProps {
   name: string;
@@ -12,6 +13,7 @@ interface HeroProps {
   location: string;
   avatarUrl: string | null;
   cvUrl: string | null;
+  dict: Dictionary;
 }
 
 const container = {
@@ -30,7 +32,7 @@ const item = {
   },
 };
 
-export function Hero({ name, title, location, avatarUrl, cvUrl }: HeroProps) {
+export function Hero({ name, title, location, avatarUrl, cvUrl, dict }: HeroProps) {
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -86,10 +88,10 @@ export function Hero({ name, title, location, avatarUrl, cvUrl }: HeroProps) {
 
         <motion.div variants={item} className="flex flex-wrap items-center justify-center gap-3">
           <LinkButton href="#projects" variant="primary">
-            Ver proyectos
+            {dict.hero.viewProjects}
           </LinkButton>
           <LinkButton href="#contact" variant="secondary">
-            Contactar
+            {dict.hero.contact}
           </LinkButton>
           {cvUrl && (
             <LinkButton
@@ -99,7 +101,7 @@ export function Hero({ name, title, location, avatarUrl, cvUrl }: HeroProps) {
               rel="noopener noreferrer"
               onClick={() => trackEvent("cv_download")}
             >
-              Descargar CV
+              {dict.hero.downloadCv}
             </LinkButton>
           )}
         </motion.div>

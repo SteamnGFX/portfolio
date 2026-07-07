@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getProfile, getExperiences, getEducations, getSkills, getProjects } from "@/lib/data";
+import { getLocalizedHomeData } from "@/lib/localize";
+import { getLocale } from "@/lib/i18n";
+import { getDictionary } from "@/lib/dictionary";
 import { Navbar } from "@/components/site/Navbar";
 import { Hero } from "@/components/site/Hero";
 import { About } from "@/components/site/About";
@@ -15,7 +17,8 @@ import { IntroSplash } from "@/components/site/IntroSplash";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const profile = await getProfile();
+  const locale = await getLocale();
+  const { profile } = await getLocalizedHomeData(locale);
   if (!profile) return {};
 
   const description = profile.summary.split("\n")[0].slice(0, 160);
@@ -39,13 +42,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const [profile, experiences, educations, skills, projects] = await Promise.all([
-    getProfile(),
-    getExperiences(),
-    getEducations(),
-    getSkills(),
-    getProjects(),
-  ]);
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
+  const { profile, experiences, educations, skills, projects } = await getLocalizedHomeData(locale);
 
   if (!profile) notFound();
 
@@ -72,7 +71,7 @@ export default async function Home() {
       />
       <PageViewTracker />
       <IntroSplash />
-      <Navbar name={profile.name} />
+      <Navbar name={profile.name} dict={dict} locale={locale} />
       <main>
         <Hero
           name={profile.name}
@@ -80,14 +79,20 @@ export default async function Home() {
           location={profile.location}
           avatarUrl={profile.avatarUrl}
           cvUrl={profile.cvUrl}
+          dict={dict}
         />
-        <About summary={profile.summary} />
-        <ExperienceTimeline experiences={experiences} educations={educations} />
-        <SkillsGrid skills={skills} />
-        <ProjectsGrid projects={projects} />
-        <ContactSection email={profile.email} linkedinUrl={profile.linkedinUrl} githubUrl={profile.githubUrl} />
+        <About summary={profile.summary} dict={dict} />
+        <ExperienceTimeline experiences={experiences} educations={educations} dict={dict} locale={locale} />
+        <SkillsGrid skills={skills} dict={dict} locale={locale} />
+        <ProjectsGrid projects={projects} dict={dict} />
+        <ContactSection
+          email={profile.email}
+          linkedinUrl={profile.linkedinUrl}
+          githubUrl={profile.githubUrl}
+          dict={dict}
+        />
       </main>
-      <Footer name={profile.name} />
+      <Footer name={profile.name} dict={dict} />
     </>
   );
 }

@@ -2,10 +2,12 @@ import type { Skill } from "@prisma/client";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { Badge } from "@/components/ui/Badge";
 import { Reveal } from "@/components/site/Reveal";
+import type { Dictionary, Locale } from "@/lib/dictionary";
 
-export function SkillsGrid({ skills }: { skills: Skill[] }) {
+export function SkillsGrid({ skills, dict, locale }: { skills: Skill[]; dict: Dictionary; locale: Locale }) {
+  const otherLabel = locale === "en" ? "Other" : "Otros";
   const grouped = skills.reduce<Record<string, Skill[]>>((acc, skill) => {
-    const key = skill.category ?? "Otros";
+    const key = skill.category ?? otherLabel;
     acc[key] = acc[key] ? [...acc[key], skill] : [skill];
     return acc;
   }, {});
@@ -13,7 +15,7 @@ export function SkillsGrid({ skills }: { skills: Skill[] }) {
   return (
     <section id="skills" className="mx-auto max-w-5xl px-6 py-20">
       <Reveal>
-        <SectionHeading eyebrow="03" title="Skills" />
+        <SectionHeading eyebrow="03" title={dict.sections.skills} />
       </Reveal>
       <div className="grid gap-8 sm:grid-cols-2">
         {Object.entries(grouped).map(([category, items], i) => (

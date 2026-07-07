@@ -57,7 +57,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
           {profile?.avatarUrl && <p className="mt-1 text-xs text-muted">Ya tienes una foto cargada.</p>}
         </div>
         <div>
-          <Label htmlFor="cv">CV (PDF)</Label>
+          <Label htmlFor="cv">CV en español (PDF)</Label>
           <Input id="cv" name="cv" type="file" accept="application/pdf" />
           {profile?.cvUrl && (
             <p className="mt-1 text-xs text-muted">
@@ -67,6 +67,22 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
             </p>
           )}
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="cvEn">CV en inglés (PDF, opcional)</Label>
+        <Input id="cvEn" name="cvEn" type="file" accept="application/pdf" />
+        <p className="mt-1 text-xs text-muted">
+          Se descarga en vez del CV en español cuando el sitio está en inglés. Si no subes uno, se usa el de español.
+          {profile?.cvUrlEn && (
+            <>
+              {" "}
+              <a href={profile.cvUrlEn} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+                Ver CV en inglés actual
+              </a>
+            </>
+          )}
+        </p>
       </div>
 
       {error && (

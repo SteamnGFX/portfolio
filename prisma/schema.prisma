@@ -23,6 +23,8 @@ model Profile {
   linkedinUrl String
   githubUrl   String?
   cvUrl       String?
+  /// CV en inglés — se sube por separado en /admin, no se traduce automáticamente.
+  cvUrlEn     String?
   updatedAt   DateTime @updatedAt
 }
 
@@ -73,6 +75,19 @@ model Project {
   createdAt   DateTime @default(now())
 
   @@index([order])
+}
+
+/// Caché de traducciones automáticas (español → inglés). Genérica: la clave
+/// es un hash del texto original, así que si editas el texto en /admin, la
+/// próxima visita en inglés dispara una nueva traducción automáticamente.
+model TranslationCache {
+  id         String   @id @default(cuid())
+  sourceHash String
+  targetLang String
+  translated String
+  createdAt  DateTime @default(now())
+
+  @@unique([sourceHash, targetLang])
 }
 
 /// Singleton: siempre id = 1. Credenciales del único usuario admin.

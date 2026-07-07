@@ -7,14 +7,15 @@ import { CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Reveal } from "@/components/site/Reveal";
 import { ImageCarousel } from "@/components/site/ImageCarousel";
+import type { Dictionary } from "@/lib/dictionary";
 
-export function ProjectsGrid({ projects }: { projects: Project[] }) {
+export function ProjectsGrid({ projects, dict }: { projects: Project[]; dict: Dictionary }) {
   if (projects.length === 0) return null;
 
   return (
     <section id="projects" className="mx-auto max-w-5xl px-6 py-20">
       <Reveal>
-        <SectionHeading eyebrow="04" title="Proyectos" />
+        <SectionHeading eyebrow="04" title={dict.sections.projects} />
       </Reveal>
       <div className="grid gap-6 sm:grid-cols-2">
         {projects.map((project, i) => (
@@ -48,7 +49,7 @@ export function ProjectsGrid({ projects }: { projects: Project[] }) {
                         rel="noopener noreferrer"
                         className="font-medium text-accent hover:underline"
                       >
-                        Repositorio →
+                        {dict.projects.repo} →
                       </a>
                     )}
                     {project.demoUrl && (
@@ -58,7 +59,7 @@ export function ProjectsGrid({ projects }: { projects: Project[] }) {
                         rel="noopener noreferrer"
                         className="font-medium text-accent hover:underline"
                       >
-                        Demo →
+                        {dict.projects.demo} →
                       </a>
                     )}
                   </div>

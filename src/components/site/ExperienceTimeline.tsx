@@ -5,16 +5,21 @@ import { motion } from "motion/react";
 import type { Experience, Education } from "@prisma/client";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { Reveal } from "@/components/site/Reveal";
+import type { Dictionary, Locale } from "@/lib/dictionary";
 
-const MONTHS_ES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const MONTHS: Record<Locale, string[]> = {
+  es: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
 
 // Usa los getters UTC (no toLocaleDateString) para que el resultado sea idéntico
 // entre servidor y navegador sin importar su zona horaria — evita mismatches de
 // hidratación por formateo de fecha dependiente del entorno.
-function formatRange(start: Date | null, end: Date | null) {
-  const fmt = (d: Date) => `${MONTHS_ES[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+function formatRange(start: Date | null, end: Date | null, locale: Locale, present: string) {
+  const months = MONTHS[locale];
+  const fmt = (d: Date) => `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
   if (!start) return "";
-  return `${fmt(start)} — ${end ? fmt(end) : "Actualidad"}`;
+  return `${fmt(start)} — ${end ? fmt(end) : present}`;
 }
 
 const listItem = {
@@ -29,14 +34,18 @@ const listItem = {
 export function ExperienceTimeline({
   experiences,
   educations,
+  dict,
+  locale,
 }: {
   experiences: Experience[];
   educations: Education[];
+  dict: Dictionary;
+  locale: Locale;
 }) {
   return (
     <section id="experience" className="mx-auto max-w-5xl px-6 py-20">
       <Reveal>
-        <SectionHeading eyebrow="02" title="Experiencia" />
+        <SectionHeading eyebrow="02" title={dict.sections.experience} />
       </Reveal>
       <ol className="space-y-8 border-l border-border pl-6">
         {experiences.map((exp) => (
@@ -50,7 +59,7 @@ export function ExperienceTimeline({
           >
             <span className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full bg-accent" />
             <p className="font-mono text-xs text-muted">
-              {formatRange(exp.startDate, exp.endDate)}
+              {formatRange(exp.startDate, exp.endDate, locale, dict.experience.present)}
             </p>
             <div className="mt-1 flex items-start gap-3">
               {exp.logoUrl && (
@@ -79,7 +88,7 @@ export function ExperienceTimeline({
       {educations.length > 0 && (
         <div className="mt-16">
           <Reveal>
-            <h3 className="mb-6 font-mono text-sm text-accent">Educación</h3>
+            <h3 className="mb-6 font-mono text-sm text-accent">{dict.sections.education}</h3>
           </Reveal>
           <ol className="space-y-6 border-l border-border pl-6">
             {educations.map((edu) => (
@@ -94,7 +103,7 @@ export function ExperienceTimeline({
                 <span className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full bg-accent-secondary" />
                 {(edu.startDate || edu.endDate) && (
                   <p className="font-mono text-xs text-muted">
-                    {formatRange(edu.startDate, edu.endDate)}
+                    {formatRange(edu.startDate, edu.endDate, locale, dict.experience.present)}
                   </p>
                 )}
                 <h4 className="mt-1 font-semibold text-foreground">{edu.degree}</h4>
