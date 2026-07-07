@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getProfile } from "@/lib/data";
+import { getSiteUrl } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   const profile = await getProfile();
 
   return [
