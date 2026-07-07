@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
 // que hace POST aquí y recibe un redirect con la cookie ya borrada en la misma
 // respuesta HTTP. No depende de JavaScript del cliente ni de React, así que
 // funciona sin importar el estado de hidratación de la página.
+export const dynamic = "force-dynamic";
+
 const COOKIES_TO_CLEAR = [
   "authjs.session-token",
   "__Secure-authjs.session-token",
@@ -16,6 +18,9 @@ const COOKIES_TO_CLEAR = [
 
 export async function POST(request: NextRequest) {
   const response = NextResponse.redirect(new URL("/admin/login", request.url), { status: 303 });
+  // Sin esto, algunas capas de caché (CDN de Vercel incluida) pueden tratar la
+  // respuesta como pública/cacheable y descartar el Set-Cookie por seguridad.
+  response.headers.set("Cache-Control", "no-store, must-revalidate");
   for (const name of COOKIES_TO_CLEAR) {
     response.cookies.delete(name);
   }
